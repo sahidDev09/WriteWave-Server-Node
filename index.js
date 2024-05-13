@@ -1,5 +1,5 @@
 const express = require("express");
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
 const port = process.env.PORT || 4000;
@@ -8,7 +8,7 @@ const app = express();
 
 // Middleware
 const corsOptions = {
-  origin: ["http://localhost:5173"],
+  origin: ["http://localhost:5173", "http://localhost:5174"],
   credentials: true,
   optionSuccessStatus: 200,
 };
@@ -38,7 +38,6 @@ async function connectToMongoDB() {
 }
 
 function setupRoutes() {
-
   const blogsCollection = client.db("writeWave").collection("blogs");
   const commentCollection = client.db("writeWave").collection("comments");
 
@@ -53,7 +52,14 @@ function setupRoutes() {
     res.json(result);
   });
 
-  
+  //get specific data using id
+
+  app.get("/blogs/:id", async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await blogsCollection.findOne(query);
+    res.send(result);
+  });
 
   // server checkup
   app.listen(port, () => {
