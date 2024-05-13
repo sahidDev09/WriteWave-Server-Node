@@ -40,6 +40,7 @@ async function connectToMongoDB() {
 function setupRoutes() {
   const blogsCollection = client.db("writeWave").collection("blogs");
   const commentCollection = client.db("writeWave").collection("comments");
+  const wishListCollection = client.db("writeWave").collection("wishlist");
 
   app.get("/", (req, res) => {
     res.send("Hello writeWave! This is your backend server.");
@@ -66,6 +67,31 @@ function setupRoutes() {
   app.post("/comments", async (req, res) => {
     const commentsData = req.body;
     const result = await commentCollection.insertOne(commentsData);
+    res.send(result);
+  });
+
+  //get all added post from client
+
+  app.post("/blogs", async (req, res) => {
+    const blogsData = req.body;
+    const result = await blogsCollection.insertOne(blogsData);
+    res.send(result);
+  });
+
+  // get wishlisted data from client
+
+  app.post("/wishlist", async (req, res) => {
+    const wishListData = req.body;
+    const result = await wishListCollection.insertOne(wishListData);
+    res.send(result);
+  });
+
+  // get wishlist data for specific user email
+
+  app.get("/wishlist/:email", async (req, res) => {
+    const result = await wishListCollection
+      .find({ email: req.params.email })
+      .toArray();
     res.send(result);
   });
 
