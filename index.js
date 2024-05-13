@@ -61,6 +61,14 @@ function setupRoutes() {
     res.send(result);
   });
 
+  // get all comments from client
+
+  app.post("/comments", async (req, res) => {
+    const commentsData = req.body;
+    const result = await commentCollection.insertOne(commentsData);
+    res.send(result);
+  });
+
   // server checkup
   app.listen(port, () => {
     console.log(`WriteWave backend server is running on PORT:${port}`);
