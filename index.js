@@ -95,6 +95,31 @@ function setupRoutes() {
     res.send(result);
   });
 
+  // delete wishlist data for specific user email
+
+  app.delete("/wishlist/:id", async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await wishListCollection.deleteOne(query);
+    res.send(result);
+  });
+
+  // update data
+
+  app.put("/blogs/:id", async (req, res) => {
+    const id = req.params.id;
+    const blogsData = req.body;
+    const query = { _id: new ObjectId(id) };
+    const options = { upsert: true };
+    const updateDoc = {
+      $set: {
+        ...blogsData,
+      },
+    };
+    const result = await blogsCollection.updateOne(query, updateDoc, options);
+    res.send(result);
+  });
+
   // server checkup
   app.listen(port, () => {
     console.log(`WriteWave backend server is running on PORT:${port}`);
