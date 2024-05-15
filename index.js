@@ -3,7 +3,7 @@ const { MongoClient, ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 5001;
 
 const app = express();
 
@@ -18,21 +18,21 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // MongoDB Connection
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.2fyd1rz.mongodb.net`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.2fyd1rz.mongodb.net/writeWave?retryWrites=true&w=majority`;
 
 let client;
 
 async function connectToMongoDB() {
   try {
-    client = new MongoClient(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    client = new MongoClient(uri);
     await client.connect();
     console.log("Connected to MongoDB");
 
-    // Setup routes after successful connection
     setupRoutes();
+
+    app.listen(port, () => {
+      console.log(`WriteWave backend server is running on PORT:${port}`);
+    });
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
   }
@@ -43,7 +43,7 @@ function setupRoutes() {
   const commentCollection = client.db("writeWave").collection("comments");
   const wishListCollection = client.db("writeWave").collection("wishlist");
 
-  // code for all jwt implimantation
+  // code for all jwt implementation
 
   app.post("/jwt", async (req, res) => {
     const user = req.body;
@@ -52,6 +52,18 @@ function setupRoutes() {
     });
     res
       .cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      })
+      .send({ success: true });
+  });
+
+  // clear jwt for logout
+
+  app.get("/logout", (req, res) => {
+    res
+      .clearCookie("token", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
@@ -145,11 +157,6 @@ function setupRoutes() {
     };
     const result = await blogsCollection.updateOne(query, updateDoc, options);
     res.send(result);
-  });
-
-  // server checkup
-  app.listen(port, () => {
-    console.log(`WriteWave backend server is running on PORT:${port}`);
   });
 }
 
