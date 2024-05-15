@@ -53,6 +53,13 @@ function setupRoutes() {
     res.json(result);
   });
 
+  //get all data for table
+
+  app.get("/blogs/table", async (req, res) => {
+    const result = await blogsCollection.find().sort({long_des_count: -1}).toArray();
+    res.json(result);
+  });
+
   //get specific data using id
 
   app.get("/blogs/:id", async (req, res) => {
