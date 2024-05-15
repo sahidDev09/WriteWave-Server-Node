@@ -2,6 +2,7 @@ const express = require("express");
 const { MongoClient, ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
+const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 4000;
 
 const app = express();
@@ -42,6 +43,22 @@ function setupRoutes() {
   const commentCollection = client.db("writeWave").collection("comments");
   const wishListCollection = client.db("writeWave").collection("wishlist");
 
+  // code for all jwt implimantation
+
+  app.post("/jwt", async (req, res) => {
+    const user = req.body;
+    const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+      expiresIn: "7d",
+    });
+    res
+      .cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      })
+      .send({ success: true });
+  });
+
   app.get("/", (req, res) => {
     res.send("Hello writeWave! This is your backend server.");
   });
@@ -56,7 +73,10 @@ function setupRoutes() {
   //get all data for table
 
   app.get("/blogs/table", async (req, res) => {
-    const result = await blogsCollection.find().sort({long_des_count: -1}).toArray();
+    const result = await blogsCollection
+      .find()
+      .sort({ long_des_count: -1 })
+      .toArray();
     res.json(result);
   });
 
