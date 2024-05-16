@@ -61,11 +61,11 @@ async function connectToMongoDB() {
   }
 }
 
-// const cookieOption = {
-//   httpOnly: true,
-//   secure: process.env.NODE_ENV === "production" ? true : false,
-//   sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-// };
+const cookieOption = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production" ? true : false,
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+};
 
 function setupRoutes() {
   const blogsCollection = client.db("writeWave").collection("blogs");
@@ -79,24 +79,14 @@ function setupRoutes() {
     const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: "7d",
     });
-    res
-      .cookie("token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production" ? true : false,
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-      })
-      .send({ success: true });
+    res.cookie("token", token, cookieOption).send({ success: true });
   });
 
   // clear jwt for logout
 
   app.get("/logout", (req, res) => {
     res
-      .clearCookie("token", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production" ? true : false,
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-      })
+      .clearCookie("token", { ...cookieOption, maxAge: 0 })
       .send({ success: true });
   });
 
