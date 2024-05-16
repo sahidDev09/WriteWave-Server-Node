@@ -182,6 +182,13 @@ function setupRoutes() {
     const result = await blogsCollection.updateOne(query, updateDoc, options);
     res.send(result);
   });
+
+  // Get comments for a specific blog ID
+  app.get("/comments/:blogID", async (req, res) => {
+    const blogID = req.params.blogID;
+    const result = await commentCollection.find({ blogID: blogID }).toArray();
+    res.json(result);
+  });
 }
 
 connectToMongoDB();
