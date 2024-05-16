@@ -3,6 +3,7 @@ const { MongoClient, ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 const port = process.env.PORT || 5001;
 
 const app = express();
@@ -16,6 +17,24 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser());
+
+//middleware for jwt verify
+
+const verifyToken = (req, res, next) => {
+  const token = req.cookies?.token;
+  if (!token) return res.status(401).send({ messsage: "Unauthorize Access!" });
+  if (token) {
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+      if (err) {
+        return res.status(401).send({ messsage: "Unauthorize Access!" });
+      }
+      console.log(decoded);
+      req.user = decoded;
+      next();
+    });
+  }
+};
 
 // MongoDB Connection
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.2fyd1rz.mongodb.net/writeWave?retryWrites=true&w=majority`;
@@ -46,8 +65,8 @@ function setupRoutes() {
   // code for all jwt implementation
 
   app.post("/jwt", async (req, res) => {
-    const user = req.body;
-    const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+    const email = req.body;
+    const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: "7d",
     });
     res
@@ -127,10 +146,15 @@ function setupRoutes() {
 
   // get wishlist data for specific user email
 
-  app.get("/wishlist/:email", async (req, res) => {
-    const result = await wishListCollection
-      .find({ email: req.params.email })
-      .toArray();
+  app.get("/wishlist/:email", verifyToken, async (req, res) => {
+    const tokenEamil = req.user.email;
+    const email = req.params.email;
+
+    if (tokenEamil !== email) {
+      return res.status(403).send({ message: "forbidden access" });
+    }
+
+    const result = await wishListCollection.find({ email: email }).toArray();
     res.send(result);
   });
 
