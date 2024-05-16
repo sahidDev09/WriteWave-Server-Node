@@ -10,7 +10,11 @@ const app = express();
 
 // Middleware
 const corsOptions = {
-  origin: ["http://localhost:5173", "http://localhost:5174"],
+  origin: [
+    "http://localhost:5173",
+    "https://writewave-99267.web.app",
+    "https://writewave-99267.firebaseapp.com",
+  ],
   credentials: true,
   optionSuccessStatus: 200,
 };
@@ -44,7 +48,7 @@ let client;
 async function connectToMongoDB() {
   try {
     client = new MongoClient(uri);
-    await client.connect();
+    // await client.connect();
     console.log("Connected to MongoDB");
 
     setupRoutes();
@@ -56,6 +60,12 @@ async function connectToMongoDB() {
     console.error("Error connecting to MongoDB:", error);
   }
 }
+
+// const cookieOption = {
+//   httpOnly: true,
+//   secure: process.env.NODE_ENV === "production" ? true : false,
+//   sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+// };
 
 function setupRoutes() {
   const blogsCollection = client.db("writeWave").collection("blogs");
@@ -72,7 +82,7 @@ function setupRoutes() {
     res
       .cookie("token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: process.env.NODE_ENV === "production" ? true : false,
         sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       })
       .send({ success: true });
@@ -84,7 +94,7 @@ function setupRoutes() {
     res
       .clearCookie("token", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: process.env.NODE_ENV === "production" ? true : false,
         sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       })
       .send({ success: true });
